@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   LayoutDashboard, FileText, ClipboardList, BarChart3, 
-  BookOpen, LogOut, Brain, ChevronLeft, Menu 
+  BookOpen, LogOut, Brain, ChevronLeft, Menu, GraduationCap 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,7 @@ import { useState } from 'react';
 
 const navItems = [
   { path: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
+  { path: '/dashboard/capacitaciones', label: 'Capacitaciones', icon: GraduationCap },
   { path: '/dashboard/examenes', label: 'Exámenes', icon: ClipboardList },
   { path: '/dashboard/contenidos', label: 'Contenidos', icon: BookOpen },
   { path: '/dashboard/historial', label: 'Historial', icon: FileText },
