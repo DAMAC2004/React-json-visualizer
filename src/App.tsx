@@ -9,6 +9,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import ExamenesPage from "./pages/ExamenesPage";
 import ContenidosPage from "./pages/ContenidosPage";
+import CapacitacionesPage from "./pages/CapacitacionesPage";
 import HistorialPage from "./pages/HistorialPage";
 import MetricasPage from "./pages/MetricasPage";
 import ExamEngine from "./pages/ExamEngine";
