@@ -10,6 +10,7 @@ import { useState } from 'react';
 
 const navItems = [
   { path: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
+  { path: '/dashboard/capacitaciones', label: 'Capacitaciones', icon: GraduationCap },
   { path: '/dashboard/examenes', label: 'Exámenes', icon: ClipboardList },
   { path: '/dashboard/contenidos', label: 'Contenidos', icon: BookOpen },
   { path: '/dashboard/historial', label: 'Historial', icon: FileText },
