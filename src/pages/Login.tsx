@@ -1,36 +1,53 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BookOpen, Brain } from 'lucide-react';
+import { BookOpen, Brain, Loader2 } from 'lucide-react';
 
 const Login = () => {
-  const [email, setEmail] = useState('david.may@tecnm.mx');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('alumno_f2_01@primaria-bj.edu.mx');
+  const [password, setPassword] = useState('Test1234');
   const [loading, setLoading] = useState(false);
+  const [slow, setSlow] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) navigate('/dashboard', { replace: true });
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSlow(false);
+    const slowTimer = setTimeout(() => setSlow(true), 5000);
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch {
-      setError('Credenciales incorrectas. Intenta de nuevo.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Credenciales incorrectas';
+      setError(msg);
     } finally {
+      clearTimeout(slowTimer);
       setLoading(false);
+      setSlow(false);
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin mr-2" /> Cargando sesión…
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen">
-      {/* Left panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 org-gradient items-center justify-center p-12">
         <div className="max-w-md text-center space-y-6">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary-foreground/20 backdrop-blur-sm">
@@ -43,7 +60,6 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Right panel - Form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-sm space-y-8">
           <div className="lg:hidden flex items-center gap-3 justify-center mb-4">
@@ -61,6 +77,12 @@ const Login = () => {
           {error && (
             <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
               {error}
+            </div>
+          )}
+
+          {slow && (
+            <div className="p-3 rounded-lg bg-warning/10 text-warning text-sm">
+              El servidor se está iniciando, esto puede tardar unos segundos…
             </div>
           )}
 
@@ -88,7 +110,13 @@ const Login = () => {
               />
             </div>
             <Button type="submit" className="w-full h-10" disabled={loading}>
-              {loading ? 'Verificando...' : 'Ingresar'}
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Verificando…
+                </span>
+              ) : (
+                'Ingresar'
+              )}
             </Button>
           </form>
 

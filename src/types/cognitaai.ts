@@ -1,165 +1,283 @@
-// ============ DIM_USUARIOS ============
+// ============ Tipos según contrato real de la API CognitaAI v1.5.0 ============
+
+export type UsuarioTipo = 'alumno' | 'catedratico' | 'admin' | 'superadmin';
+export type EstadoIntento = 'PENDIENTE' | 'EN_PROGRESO' | 'COMPLETADO' | 'EXPIRADO';
+export type Dificultad = 'BASICO' | 'INTERMEDIO' | 'AVANZADO';
+export type EstadoInscripcion = 'pendiente' | 'en_progreso' | 'completado' | 'vencido';
+
 export interface Usuario {
-  id_usuario: number;
-  correo_electronico: string;
-  username: string;
-  nombre_completo: string;
-  tipo_usuario: 'Alumno' | 'Capacitor' | 'Administrador' | 'Superadmin';
-  id_organizacion: number | null;
-  fecha_registro: string;
-  activo: boolean;
+  usuario_id: string;
+  usuario_tipo: UsuarioTipo;
+  usuario_rol?: string;
+  usuario_nombre: string;
+  usuario_apellidos?: string;
+  usuario_correo: string;
+  usuario_idioma?: string;
+  usuario_modo_oscuro?: boolean;
+  avatar_url?: string | null;
 }
 
-// ============ DIM_PERFIL_ALUMNOS ============
-export interface PerfilAlumno {
-  id_usuario: number;
-  grupo: string;
-  carrera_departamento: string;
-  genero: string;
-  nivel_academico: string;
-}
-
-// ============ DIM_ORGANIZACIONES ============
 export interface Organizacion {
-  id_organizacion: number;
-  nombre_organizacion: string;
-  region: string;
-  tipo: string;
-  esquema_color_asignado?: {
-    primary: string; // HSL string e.g. "221 83% 53%"
-    secondary: string;
-  };
-  logo_url?: string;
+  org_id: string;
+  org_nombre: string;
+  org_color_primario?: string | null;
+  org_color_secundario?: string | null;
+  org_logo_url?: string | null;
 }
 
-// ============ DIM_CAPACITACIONES ============
-export interface Capacitacion {
-  id_capacitacion: number;
-  id_usuario_capacitor: number;
-  nombre_capacitacion: string;
-  descripcion: string;
-  fecha_inicio_vigencia: string;
-  fecha_fin_vigencia: string;
-  estado: 'Activa' | 'Pausada' | 'Finalizada';
-}
-
-// ============ DIM_EXAMENES ============
-export interface Examen {
-  id_examen: number;
-  id_capacitacion: number;
-  titulo: string;
-  nivel_dificultad: 'Baja' | 'Media' | 'Alta';
-  tema: string;
-  total_preguntas?: number;
-  fecha_limite?: string;
-  estado_intento?: 'PENDIENTE' | 'EN_PROGRESO' | 'COMPLETADO';
-}
-
-// ============ DIM_PREGUNTAS ============
-export interface Pregunta {
-  id_pregunta: number;
-  enunciado: string;
-  opcion_a: string;
-  opcion_b: string;
-  opcion_c: string;
-  opcion_d: string;
-  respuesta_correcta_clave: 'A' | 'B' | 'C' | 'D';
-  explicacion_ia: string;
-  svg_content?: string;
-}
-
-// ============ DIM_CONTENIDOS_PDF ============
-export interface ContenidoPDF {
-  id_contenido: number;
-  id_capacitacion: number;
-  titulo_documento: string;
-  categoria_tema: string;
-  tamaño_archivo_kb: number;
-  es_descargable: boolean;
-  url_s3?: string;
-  visto?: boolean;
-}
-
-// ============ FACT_INSCRIPCIONES ============
-export interface Inscripcion {
-  id_inscripcion: number;
-  id_usuario: number;
-  id_capacitacion: number;
-  progreso_total: number;
-  estado_finalizacion: 'En curso' | 'Completado' | 'Vencido';
-}
-
-// ============ API Responses ============
 export interface LoginResponse {
-  status: 'success' | 'error';
-  user_id: number;
-  tipo_usuario: string;
-  nombre: string;
-  id_organizacion: number;
-  nombre_organizacion: string;
-  perfil_alumno: {
-    grupo: string;
-    carrera: string;
-    genero: string;
-  };
-  token_sesion: string;
-  esquema_color?: {
-    primary: string;
-    secondary: string;
-  };
-  logo_url?: string;
+  status?: string;
+  access_token: string;
+  token_type?: string;
+  expires_in?: number;
+  usuario: Usuario;
+  organizacion: Organizacion;
+}
+
+export interface MeResponse {
+  usuario: Usuario;
+  organizacion: Organizacion;
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  usuario: Usuario | null;
+  organizacion: Organizacion | null;
+  token: string | null;
+  loading: boolean;
+}
+
+// ============ Dashboard ============
+export interface Metricas {
+  promedio_actual: number;
+  racha_dias: number;
+  ultima_actividad?: string | null;
+  capacitaciones_completadas: number;
+  capacitaciones_total: number;
+  examenes_aprobados: number;
+  examenes_total: number;
+  tasa_aprobacion?: number;
+}
+
+export interface CapacitacionDashboard {
+  capaci_id: string;
+  capaci_nombre: string;
+  progreso: number;
+  estado_inscripcion: EstadoInscripcion;
+  catedraticos?: { nombre?: string }[];
+}
+
+export interface ExamenPendiente {
+  exam_id: string;
+  exam_nombre: string;
+  exam_dificultad: Dificultad;
+  intentos_realizados: number;
+  estado_intento: EstadoIntento;
+  total_preguntas: number;
+  capaci_id?: string;
+  capaci_nombre?: string;
+  exam_tema?: string;
+  exam_fecha_vencimiento?: string | null;
+}
+
+export interface IntentoEnProgresoRef {
+  intento_id: string;
+  exam_id: string;
+  exam_nombre: string;
+  capaci_nombre?: string;
+  tiempo_restante_seg: number;
 }
 
 export interface DashboardResponse {
-  capacitaciones: (Capacitacion & { inscripcion: Inscripcion })[];
-  examenes_pendientes: Examen[];
-  contenidos: ContenidoPDF[];
-  metricas: {
-    promedio_actual: number;
-    capacitaciones_completadas: number;
-    capacitaciones_total: number;
-    examenes_aprobados: number;
-    examenes_total: number;
-    racha_dias: number;
-  };
+  saludo?: string;
+  metricas: Metricas;
+  intento_en_progreso: IntentoEnProgresoRef | null;
+  capacitaciones: CapacitacionDashboard[];
+  examenes_pendientes: ExamenPendiente[];
+  contenidos_recientes?: unknown[];
 }
 
-export interface RespuestaDetalle {
-  id_pregunta: number;
-  opcion_elegida: string | null;
-  tiempo_segundos: number;
-  duda: boolean;
+// ============ Exámenes ============
+export interface ExamenListItem {
+  exam_id: string;
+  capaci_id: string;
+  capaci_nombre: string;
+  exam_nombre: string;
+  exam_dificultad: Dificultad;
+  exam_tema?: string;
+  exam_tiempo_limite: number;
+  exam_intentos_max: number;
+  intentos_realizados: number;
+  mejor_calificacion: number | null;
+  exam_fecha_vencimiento?: string | null;
+  total_preguntas: number;
+  estado_intento: EstadoIntento;
 }
 
-export interface ExamenSubmitRequest {
-  id_usuario: number;
-  id_examen: number;
-  id_capacitacion: number;
-  tiempo_total_segundos: number;
-  dispositivo: string;
-  respuestas_detalle: RespuestaDetalle[];
-}
-
-export interface ExamenResultResponse {
-  calificacion: number;
-  aciertos: number;
-  errores: number;
+export interface ExamenListResponse {
+  items: ExamenListItem[];
   total: number;
-  porcentaje_aprobacion: number;
-  aprobado: boolean;
-  feedback_ia: string;
-  detalle: {
-    id_pregunta: number;
-    correcta: boolean;
-    respuesta_alumno: string;
-    respuesta_correcta: string;
-    explicacion_ia: string;
-  }[];
 }
 
-// ============ Auth State ============
-export interface AuthState {
-  isAuthenticated: boolean;
-  user: LoginResponse | null;
-  token: string | null;
+export interface ExamenDetalle {
+  exam_id: string;
+  exam_nombre: string;
+  exam_dificultad: Dificultad;
+  exam_tiempo_limite: number;
+  exam_intentos_max: number;
+  exam_calificacion_minima: number;
+  intentos_realizados: number;
+  intentos_disponibles: number;
+  mejor_calificacion: number | null;
+  total_preguntas: number;
+  estado_intento: EstadoIntento;
+}
+
+// ============ Motor de Intento ============
+export interface OpcionAPI {
+  letra: string;
+  texto: string;
+  es_correcta?: boolean;
+  explicacion?: string;
+}
+
+export interface PreguntaAPI {
+  id_pregunta: string;
+  enunciado: string;
+  tipo_pregunta?: string;
+  opciones: OpcionAPI[];
+}
+
+export interface ProgresoExamen {
+  respuestas: Record<string, string>;
+  marcadas: string[];
+  tiempo_restante?: number;
+  ultima_sync?: string;
+}
+
+export interface IntentoActivo {
+  intento_id: string;
+  exam_id: string;
+  exam_nombre?: string;
+  capaci_nombre?: string;
+  numero_intento?: number;
+  es_retoma?: boolean;
+  fecha_inicio?: string;
+  tiempo_limite_seg?: number;
+  tiempo_restante_seg: number;
+  preguntas: PreguntaAPI[];
+  progreso_guardado: ProgresoExamen | null;
+}
+
+export interface AutosaveBody {
+  respuestas: Record<string, string>;
+  marcadas: string[];
+}
+
+export interface AutosaveResponse {
+  intento_id: string;
+  synced_at: string;
+  tiempo_restante_seg: number;
+}
+
+export interface EntregarResponse {
+  intento_id: string;
+  inex_estado: string;
+  fecha_fin?: string;
+  resultados_disponibles_en?: string;
+  mensaje?: string;
+}
+
+// ============ Capacitaciones ============
+export interface CapacitacionListItem {
+  capaci_id: string;
+  capaci_nombre: string;
+  capaci_descripcion?: string;
+  capaci_fecha_inicio?: string;
+  capaci_fecha_fin?: string;
+  estado_inscripcion: EstadoInscripcion;
+  progreso: number;
+}
+
+// ============ Contenidos ============
+export interface ContenidoItem {
+  conten_id: string;
+  conten_nombre: string;
+  conten_tipo: string;
+  caco_unidad?: number;
+  caco_orden?: number;
+  conten_tamanio_kb?: number | null;
+  visto?: boolean;
+}
+
+export interface ContenidoListResponse {
+  capaci_id: string;
+  total: number;
+  items: ContenidoItem[];
+}
+
+export interface ContenidoUrlResponse {
+  conten_id: string;
+  conten_nombre: string;
+  conten_tipo: string;
+  url: string;
+  expira_en: string | null;
+}
+
+// ============ Historial ============
+export interface HistorialItem {
+  intento_id: string;
+  exam_nombre: string;
+  capaci_nombre: string;
+  inex_estado: 'COMPLETADO' | 'EXPIRADO';
+  inex_fecha_inicio: string;
+  inex_fecha_fin: string;
+  calificacion: number | null;
+  aciertos: number | null;
+  total_preguntas: number;
+  resultados_disponibles: boolean;
+}
+
+export interface HistorialFeedback {
+  id_pregunta: string;
+  enunciado: string;
+  respuesta_alumno: string | null;
+  respuesta_correcta: string;
+  es_correcto: boolean;
+  explicacion: string;
+  opciones: OpcionAPI[];
+}
+
+export interface HistorialDetalle {
+  intento_id: string;
+  exam_nombre: string;
+  resultados_disponibles: boolean;
+  resultados_disponibles_en?: string | null;
+  calificacion?: number | null;
+  aciertos?: number | null;
+  total_preguntas?: number;
+  aprobado?: boolean;
+  feedback?: HistorialFeedback[];
+}
+
+// ============ Métricas ============
+export interface EvolucionPunto {
+  periodo: string;
+  promedio: number;
+  examenes_presentados: number;
+}
+
+export interface MetricasResponse extends Metricas {
+  evolucion_promedio?: EvolucionPunto[];
+}
+
+// ============ Certificados ============
+export interface CertificadoItem {
+  cert_id: string;
+  cert_folio: string;
+  exam_nombre: string;
+  capaci_nombre: string;
+  cert_emitido_en: string;
+  cert_pdf_url: string | null;
+  cert_qr_url: string | null;
 }

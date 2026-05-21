@@ -1,51 +1,71 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import type { AuthState, LoginResponse } from '@/types/cognitaai';
-import { mockLoginResponse } from '@/services/mockData';
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import type { AuthState, LoginResponse, Usuario, Organizacion } from '@/types/cognitaai';
+import { login as apiLogin, getMe, logout as apiLogout } from '@/lib/auth';
+import { getToken } from '@/lib/api';
+import { applyOrgBranding, resetOrgBranding } from '@/lib/color';
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<LoginResponse>;
+  login: (correo: string, password: string) => Promise<LoginResponse>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const initial: AuthState = {
+  isAuthenticated: false,
+  usuario: null,
+  organizacion: null,
+  token: null,
+  loading: true,
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>(() => {
-    const saved = localStorage.getItem('cognitaai_auth');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch { /* ignore */ }
+  const [state, setState] = useState<AuthState>(initial);
+
+  const applyOrg = (org: Organizacion | null) => {
+    if (org) applyOrgBranding(org.org_color_primario, org.org_color_secundario);
+  };
+
+  // Hydrate from token on mount
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      setState({ ...initial, loading: false });
+      return;
     }
-    return { isAuthenticated: false, user: null, token: null };
-  });
+    getMe()
+      .then((me) => {
+        applyOrg(me.organizacion);
+        setState({
+          isAuthenticated: true,
+          usuario: me.usuario,
+          organizacion: me.organizacion,
+          token,
+          loading: false,
+        });
+      })
+      .catch(() => {
+        setState({ ...initial, loading: false });
+      });
+  }, []);
 
-  const login = useCallback(async (_email: string, _password: string): Promise<LoginResponse> => {
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 800));
-    const response = mockLoginResponse;
-
-    // Apply org branding
-    if (response.esquema_color) {
-      document.documentElement.style.setProperty('--org-primary', response.esquema_color.primary);
-      document.documentElement.style.setProperty('--org-secondary', response.esquema_color.secondary);
-    }
-
-    const newState: AuthState = {
+  const login = useCallback(async (correo: string, password: string): Promise<LoginResponse> => {
+    const res = await apiLogin(correo, password);
+    applyOrg(res.organizacion);
+    setState({
       isAuthenticated: true,
-      user: response,
-      token: response.token_sesion,
-    };
-    setState(newState);
-    localStorage.setItem('cognitaai_auth', JSON.stringify(newState));
-    return response;
+      usuario: res.usuario,
+      organizacion: res.organizacion,
+      token: res.access_token,
+      loading: false,
+    });
+    return res;
   }, []);
 
   const logout = useCallback(() => {
-    setState({ isAuthenticated: false, user: null, token: null });
-    localStorage.removeItem('cognitaai_auth');
-    document.documentElement.style.removeProperty('--org-primary');
-    document.documentElement.style.removeProperty('--org-secondary');
+    apiLogout();
+    resetOrgBranding();
+    setState({ ...initial, loading: false });
   }, []);
 
   return (
@@ -59,4 +79,11 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be inside AuthProvider');
   return ctx;
+}
+
+// Helper para obtener un usuario tipado garantizado (uso en páginas tras guard)
+export function useUsuario(): Usuario {
+  const { usuario } = useAuth();
+  if (!usuario) throw new Error('Usuario no disponible');
+  return usuario;
 }
