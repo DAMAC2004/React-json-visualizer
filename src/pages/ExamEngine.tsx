@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+
 import {
   iniciarExamen, getIntentoEnProgreso, autosaveIntento, entregarIntento,
 } from '@/lib/examenes';
