@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
@@ -106,7 +107,7 @@ const ExamEngine = () => {
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intento]);
-
+  const queryClient = useQueryClient();
   // 4. Auto-entrega si tiempo se agota
   const entregarMut = useMutation({
     mutationFn: () => {
@@ -117,7 +118,10 @@ const ExamEngine = () => {
       });
     },
     onSuccess: (res) => {
-      navigate(`/resultados?intento=${res.intento_id}`, { replace: true });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['examenes'] });
+        queryClient.invalidateQueries({ queryKey: ['intento-en-progreso'] });
+        navigate(`/resultados?intento=${res.intento_id}`, { replace: true });
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : 'Error al entregar');
